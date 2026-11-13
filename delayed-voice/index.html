@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delayed Voice</title>
+<style>
+  /* Layout: one narrow column, the delay figure is the centrepiece, controls stacked beneath. */
+  :root {
+    --bg: #edf1f0;
+    --panel: #ffffff;
+    --ink: #14201d;
+    --muted: #586763;
+    --line: #cfd8d5;
+    --accent: #b4235a;
+    --accent-ink: #ffffff;
+    --warn: #8a5a00;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-num: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101716; --panel: #19221f; --ink: #e6eeeb; --muted: #9aaaa5;
+      --line: #2c3a36; --accent: #f0719f; --accent-ink: #1b0810; --warn: #e3b24d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101716; --panel: #19221f; --ink: #e6eeeb; --muted: #9aaaa5;
+    --line: #2c3a36; --accent: #f0719f; --accent-ink: #1b0810; --warn: #e3b24d;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.5 var(--font-body);
+    padding: 24px 16px 40px;
+  }
+  main { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  h1 { font-size: 1.25rem; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  .lede { color: var(--muted); }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .readout { display: flex; align-items: baseline; gap: 8px; }
+  .readout output {
+    font: 600 3.5rem/1 var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  }
+  .readout span { color: var(--muted); font-size: 1.1rem; }
+  .sub { color: var(--muted); font-size: 0.875rem; min-height: 1.3em; }
+  label { font-size: 0.875rem; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); height: 32px; margin: 0; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit; color: var(--ink); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer;
+  }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #toggle {
+    background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+    font-weight: 600; font-size: 1.1rem; padding: 16px; border-radius: 14px; width: 100%;
+  }
+  #toggle.on { background: transparent; color: var(--accent); }
+  .meter { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; }
+  #msg { color: var(--warn); font-size: 0.9rem; }
+  #msg:empty { display: none; }
+  .note { font-size: 0.9rem; color: var(--muted); }
+  .note strong { color: var(--ink); }
+  blockquote {
+    margin: 0; padding-left: 14px; border-left: 3px solid var(--accent); font-size: 1.05rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delayed Voice</h1>
+  <p class="lede">Hear yourself a beat late. Put headphones on, press start, and read the passage out loud at a normal pace.</p>
+
+  <section class="panel" aria-label="Delay controls">
+    <div>
+      <div class="readout"><output id="ms" for="delay">50</output><span>ms delay</span></div>
+      <p class="sub" id="total"></p>
+    </div>
+
+    <label for="delay">Delay
+      <input id="delay" type="range" min="0" max="400" step="5" value="50">
+    </label>
+    <div class="presets" role="group" aria-label="Delay presets">
+      <button type="button" data-ms="50" aria-pressed="true">50 ms</button>
+      <button type="button" data-ms="100" aria-pressed="false">100 ms</button>
+      <button type="button" data-ms="180" aria-pressed="false">180 ms</button>
+      <button type="button" data-ms="250" aria-pressed="false">250 ms</button>
+    </div>
+
+    <label for="vol">Playback volume
+      <input id="vol" type="range" min="0" max="300" step="5" value="150">
+    </label>
+
+    <div class="meter" aria-hidden="true"><i id="level"></i></div>
+    <button id="toggle" type="button">Start</button>
+    <p id="msg" role="alert"></p>
+  </section>
+
+  <blockquote>
+    On Thursday the three of us carried thirty-six boxes of freshly printed brochures through
+    the back of the building, past the broken photocopier, and stacked them beside the particularly
+    precarious pile of paperwork that Patricia had promised to process by the previous Friday.
+  </blockquote>
+
+  <p class="note"><strong>Wired headphones only.</strong> Speakers will howl, and Bluetooth adds its own
+    lag of 150 ms or more. Turn the volume up until your delayed voice is louder than your real one.
+    The effect is strongest for most people somewhere around 150 to 250 ms.</p>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var delayEl = $('delay'), volEl = $('vol'), msEl = $('ms'), totalEl = $('total');
+  var toggle = $('toggle'), msg = $('msg'), level = $('level');
+  var presets = document.querySelectorAll('.presets button');
+  var ctx = null, stream = null, delayNode = null, gainNode = null, analyser = null, raf = 0, buf = null;
+
+  function currentMs() { return Number(delayEl.value); }
+
+  function showDelay() {
+    var ms = currentMs();
+    msEl.textContent = ms;
+    presets.forEach(function (b) { b.setAttribute('aria-pressed', String(Number(b.dataset.ms) === ms)); });
+    if (delayNode) delayNode.delayTime.setTargetAtTime(ms / 1000, ctx.currentTime, 0.01);
+    showTotal();
+  }
+
+  function showTotal() {
+    if (!ctx) { totalEl.textContent = ''; return; }
+    var extra = (ctx.baseLatency || 0) + (ctx.outputLatency || 0);
+    var track = stream && stream.getAudioTracks()[0];
+    var s = track && track.getSettings ? track.getSettings() : {};
+    if (typeof s.latency === 'number') extra += s.latency;
+    var extraMs = Math.round(extra * 1000);
+    totalEl.textContent = extraMs > 0
+      ? 'Your device adds about ' + extraMs + ' ms, so you hear roughly ' + (currentMs() + extraMs) + ' ms.'
+      : 'Your device adds a little lag of its own on top.';
+  }
+
+  function tick() {
+    analyser.getFloatTimeDomainData(buf);
+    var peak = 0;
+    for (var i = 0; i < buf.length; i++) { var v = Math.abs(buf[i]); if (v > peak) peak = v; }
+    level.style.width = Math.min(100, Math.round(peak * 140)) + '%';
+    raf = requestAnimationFrame(tick);
+  }
+
+  async function start() {
+    msg.textContent = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      msg.textContent = 'This browser will not give this page the microphone. Open the file in Chrome, Edge or Safari, or from an https address.';
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+    } catch (e) {
+      msg.textContent = e && e.name === 'NotAllowedError'
+        ? 'Microphone access was blocked. Allow it for this page in your browser settings, then press Start again.'
+        : 'Could not open the microphone (' + (e && e.name ? e.name : 'unknown error') + ').';
+      return;
+    }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC({ latencyHint: 'interactive' });
+    if (ctx.state === 'suspended') await ctx.resume();
+    var src = ctx.createMediaStreamSource(stream);
+    delayNode = ctx.createDelay(1);
+    delayNode.delayTime.value = currentMs() / 1000;
+    gainNode = ctx.createGain();
+    gainNode.gain.value = Number(volEl.value) / 100;
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    buf = new Float32Array(analyser.fftSize);
+    src.connect(delayNode); delayNode.connect(gainNode); gainNode.connect(ctx.destination);
+    src.connect(analyser);
+    toggle.textContent = 'Stop';
+    toggle.classList.add('on');
+    showTotal();
+    setTimeout(showTotal, 600);
+    tick();
+  }
+
+  function stop() {
+    cancelAnimationFrame(raf);
+    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+    if (ctx) ctx.close();
+    ctx = stream = delayNode = gainNode = analyser = null;
+    level.style.width = '0';
+    toggle.textContent = 'Start';
+    toggle.classList.remove('on');
+    showTotal();
+  }
+
+  toggle.addEventListener('click', function () { ctx ? stop() : start(); });
+  delayEl.addEventListener('input', showDelay);
+  volEl.addEventListener('input', function () {
+    if (gainNode) gainNode.gain.setTargetAtTime(Number(volEl.value) / 100, ctx.currentTime, 0.01);
+  });
+  presets.forEach(function (b) {
+    b.addEventListener('click', function () { delayEl.value = b.dataset.ms; showDelay(); });
+  });
+  showDelay();
+})();
+</script>
+</body>
+</html>
